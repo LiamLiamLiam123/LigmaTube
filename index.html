@@ -73,22 +73,24 @@
     cursor: pointer;
   }
   .logo-mark {
-    background: #00A651;
+    background: linear-gradient(135deg, #00A651, #063D22);
     width: 34px;
-    height: 24px;
-    border-radius: 8px;
+    height: 34px;
+    border-radius: 50%;
     position: relative;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,0.25);
   }
   .logo-mark::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-45%, -50%);
-    border-style: solid;
-    border-width: 6px 0 6px 10px;
-    border-color: transparent transparent transparent #FFFFFF;
+    content: "L";
+    font-family: 'Roboto', Arial, sans-serif;
+    font-weight: 900;
+    font-size: 1.05rem;
+    color: #FFFFFF;
+    line-height: 1;
   }
   .logo-text {
     font-size: 1.35rem;
@@ -261,6 +263,73 @@
     font-size: 0.9rem;
   }
 
+  .action-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .vote-group {
+    display: flex;
+    align-items: center;
+    background: var(--yt-light-gray);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  .vote-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 16px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--yt-black);
+    background: transparent;
+    border: none;
+    font-family: 'Roboto', Arial, sans-serif;
+  }
+  .vote-btn:hover { background: var(--yt-hover); }
+  .vote-btn.active { color: #063D22; }
+  .vote-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--yt-border);
+  }
+  .vote-btn svg { flex-shrink: 0; }
+
+  .description-box {
+    background: var(--yt-light-gray);
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-top: 14px;
+    cursor: pointer;
+  }
+  .description-meta {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--yt-black);
+    margin: 0 0 6px;
+  }
+  .description-text {
+    font-size: 0.88rem;
+    line-height: 1.45;
+    color: var(--yt-black);
+    white-space: pre-wrap;
+    margin: 0;
+    max-height: 60px;
+    overflow: hidden;
+  }
+  .description-box.expanded .description-text {
+    max-height: none;
+  }
+  .description-toggle {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--yt-gray-text);
+    margin-top: 6px;
+  }
+
   /* ---------- VIDEO GRID ---------- */
   #video-list {
     display: grid;
@@ -424,6 +493,24 @@
     </div>
     <div id="player-title"></div>
     <div id="player-channel"></div>
+    <div class="action-row">
+      <div class="vote-group">
+        <button class="vote-btn" id="like-btn" onclick="toggleLike()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 11H3v11h4z"/></svg>
+          <span id="like-count">0</span>
+        </button>
+        <div class="vote-divider"></div>
+        <button class="vote-btn" id="dislike-btn" onclick="toggleDislike()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transform: scaleY(-1);"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 11H3v11h4z"/></svg>
+          <span id="dislike-count">0</span>
+        </button>
+      </div>
+    </div>
+    <div class="description-box" id="description-box" onclick="toggleDescription()" style="display:none;">
+      <p class="description-meta" id="description-meta"></p>
+      <p class="description-text" id="description-text"></p>
+      <p class="description-toggle" id="description-toggle">Show more</p>
+    </div>
   </div>
 
   <div id="video-list">
@@ -568,7 +655,48 @@
     });
   }
 
-  function playVideo(videoId, title, channel) {
+  let voteState = { baseLikes: 0, dislikes: 0, userVote: null }; // userVote: 'like' | 'dislike' | null
+
+  function formatCount(n) {
+    n = parseInt(n, 10) || 0;
+    if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
+    return String(n);
+  }
+
+  function renderVotes() {
+    const likeCount = voteState.baseLikes + (voteState.userVote === 'like' ? 1 : 0);
+    const dislikeCount = voteState.dislikes + (voteState.userVote === 'dislike' ? 1 : 0);
+    document.getElementById('like-count').textContent = formatCount(likeCount);
+    document.getElementById('dislike-count').textContent = formatCount(dislikeCount);
+    document.getElementById('like-btn').classList.toggle('active', voteState.userVote === 'like');
+    document.getElementById('dislike-btn').classList.toggle('active', voteState.userVote === 'dislike');
+  }
+
+  function toggleLike() {
+    voteState.userVote = voteState.userVote === 'like' ? null : 'like';
+    renderVotes();
+  }
+
+  function toggleDislike() {
+    voteState.userVote = voteState.userVote === 'dislike' ? null : 'dislike';
+    renderVotes();
+  }
+
+  function toggleDescription() {
+    const box = document.getElementById('description-box');
+    const toggle = document.getElementById('description-toggle');
+    box.classList.toggle('expanded');
+    toggle.textContent = box.classList.contains('expanded') ? 'Show less' : 'Show more';
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  async function playVideo(videoId, title, channel) {
     const player = document.getElementById("player");
     const iframe = document.getElementById("video-player");
     iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
@@ -576,6 +704,35 @@
     document.getElementById('player-channel').textContent = channel;
     player.style.display = "block";
     window.scrollTo({ top: 0, behavior: "smooth" });
+
+    const descBox = document.getElementById('description-box');
+    descBox.style.display = 'none';
+    descBox.classList.remove('expanded');
+    document.getElementById('description-toggle').textContent = 'Show more';
+
+    voteState = { baseLikes: 0, dislikes: Math.floor(Math.random() * 40), userVote: null };
+    renderVotes();
+
+    try {
+      const res = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoId}&key=${API_KEY}`
+      );
+      const data = await res.json();
+      const item = data.items && data.items[0];
+      if (!item) return;
+      const views = item.statistics ? formatViews(item.statistics.viewCount) : '';
+      const date = formatDate(item.snippet.publishedAt);
+      document.getElementById('description-meta').textContent = [views, date].filter(Boolean).join(' · ');
+      document.getElementById('description-text').textContent = item.snippet.description || 'No description available.';
+      descBox.style.display = 'block';
+
+      if (item.statistics && item.statistics.likeCount) {
+        voteState.baseLikes = parseInt(item.statistics.likeCount, 10);
+        renderVotes();
+      }
+    } catch (e) {
+      // silently ignore description fetch failure
+    }
   }
 
   window.onload = getTrending;
