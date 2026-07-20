@@ -4,164 +4,580 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LigmaTube</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
+  :root {
+    --yt-red: #00A651;
+    --yt-black: #0F1F14;
+    --yt-gray-text: #4C6656;
+    --yt-light-gray: #E9F5EC;
+    --yt-border: #CFE9D8;
+    --yt-hover: #DFF2E6;
+  }
+
+  * { box-sizing: border-box; }
+
   body {
-    background-color: #0f0; /* Green background */
-    color: white;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #F4FBF6;
+    color: var(--yt-black);
+    font-family: 'Roboto', Arial, sans-serif;
     margin: 0;
     padding: 0;
   }
 
+  /* ---------- HEADER ---------- */
   header {
-    background-color: #006400; /* Dark green */
-    padding: 15px 20px;
+    background-color: #063D22;
+    border-bottom: 1px solid var(--yt-border);
+    padding: 0 16px;
+    height: 56px;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
 
-  header h1 {
-    font-size: 1.8em;
-    margin: 0;
-    color: #00ff7f;
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 170px;
+    margin-right: 32px;
+  }
+
+  .menu-icon {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+  }
+  .menu-icon:hover { background: rgba(255,255,255,0.12); }
+  .menu-icon span {
+    width: 20px;
+    height: 2px;
+    background: #FFFFFF;
+    display: block;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    text-decoration: none;
+    color: #FFFFFF;
+    cursor: pointer;
+  }
+  .logo-mark {
+    background: #00A651;
+    width: 34px;
+    height: 24px;
+    border-radius: 8px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .logo-mark::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-45%, -50%);
+    border-style: solid;
+    border-width: 6px 0 6px 10px;
+    border-color: transparent transparent transparent #FFFFFF;
+  }
+  .logo-text {
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .logo-text .accent { color: #6EFFB0; }
+
+  .header-center {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    max-width: 720px;
   }
 
   #search-bar {
     display: flex;
-    gap: 10px;
+    width: 100%;
+    max-width: 600px;
   }
 
   #search-input {
-    padding: 8px;
-    border-radius: 5px;
-    border: none;
-    width: 250px;
+    flex: 1;
+    padding: 8px 16px;
+    border: 1px solid #0A5A32;
+    border-right: none;
+    border-radius: 20px 0 0 20px;
     outline: none;
+    font-size: 1rem;
+    background: #FFFFFF;
   }
+  #search-input:focus { border-color: #00A651; }
 
-  button {
-    padding: 8px 14px;
-    border: none;
-    border-radius: 5px;
-    background-color: #00c851;
-    color: white;
-    font-weight: bold;
+  #search-bar button.search-btn {
+    background: #0A5A32;
+    border: 1px solid #0A5A32;
+    border-radius: 0 20px 20px 0;
+    padding: 0 20px;
     cursor: pointer;
-    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #search-bar button.search-btn:hover { background: #0C6B3C; }
+  #search-bar button.search-btn svg { width: 20px; height: 20px; }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 170px;
+    justify-content: flex-end;
   }
 
-  button:hover {
-    background-color: #009e3e;
+  .trending-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #0A5A32;
+    border-radius: 18px;
+    padding: 8px 16px;
+    background: #0A5A32;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #FFFFFF;
+  }
+  .trending-pill:hover { background: #0C6B3C; }
+
+  /* ---------- SIDEBAR ---------- */
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 199;
+  }
+  .sidebar-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 240px;
+    background: #FFFFFF;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.15);
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    z-index: 200;
+    padding-top: 56px;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 12px 24px;
+    cursor: pointer;
+    color: var(--yt-black);
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+  .sidebar-item svg { flex-shrink: 0; color: var(--yt-black); }
+  .sidebar-item:hover { background: var(--yt-hover); }
+  .sidebar-item.active {
+    background: var(--yt-light-gray);
+    color: #063D22;
+    font-weight: 700;
+  }
+  .sidebar-item.active svg { color: #063D22; }
+
+  /* ---------- CATEGORY CHIPS ---------- */
+  .chips {
+    display: flex;
+    gap: 12px;
+    padding: 12px 24px;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--yt-border);
+  }
+  .chip {
+    padding: 6px 14px;
+    background: var(--yt-light-gray);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .chip.active {
+    background: #063D22;
+    color: #FFFFFF;
+  }
+  .chip:hover:not(.active) { background: #CFE9D8; }
+
+  /* ---------- PLAYER ---------- */
+  #player {
+    width: 100%;
+    max-width: 1000px;
+    margin: 24px auto 0;
+    padding: 0 24px;
+    display: none;
+  }
+  .player-frame-wrap {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #000;
+  }
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+  #player-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 14px 0 4px;
+  }
+  #player-channel {
+    color: var(--yt-gray-text);
+    font-size: 0.9rem;
   }
 
+  /* ---------- VIDEO GRID ---------- */
   #video-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
-    padding: 20px;
+    gap: 24px 16px;
+    padding: 24px;
+    max-width: 1600px;
+    margin: 0 auto;
   }
 
   .video {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 10px;
-    padding: 10px;
+    cursor: pointer;
+  }
+
+  .thumb-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #E5E5E5;
+  }
+  .thumb-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.2s ease;
+  }
+  .video:hover .thumb-wrap img { transform: scale(1.03); }
+
+  .video-info {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .video-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0C6B3C, #063D22);
+    color: #fff;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  .video-meta { min-width: 0; }
+
+  .video-title {
+    font-size: 0.95rem;
+    font-weight: 500;
+    line-height: 1.3;
+    margin: 0 0 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .video-channel, .video-stats {
+    font-size: 0.82rem;
+    color: var(--yt-gray-text);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ---------- LOADER ---------- */
+  .loading-msg {
+    grid-column: 1 / -1;
     text-align: center;
-    transition: 0.3s;
+    color: var(--yt-gray-text);
+    padding: 60px 0;
+    font-size: 0.95rem;
   }
 
-  .video:hover {
-    transform: scale(1.05);
-    background: rgba(0, 0, 0, 0.4);
-  }
-
-  .video img {
-    width: 100%;
-    border-radius: 10px;
-  }
-
-  #player {
-    width: 100%;
-    max-width: 900px;
-    margin: 30px auto;
-    display: none;
-  }
-
-  iframe {
-    width: 100%;
-    height: 500px;
-    border: none;
-    border-radius: 10px;
+  @media (max-width: 700px) {
+    .header-left { min-width: auto; }
+    .logo-text { display: none; }
+    .header-right { min-width: auto; }
+    .trending-pill span.label { display: none; }
   }
 </style>
 </head>
 <body>
+
   <header>
-    <h1>LigmaTube</h1>
-    <div id="search-bar">
-      <input id="search-input" type="text" placeholder="Search videos...">
-      <button onclick="searchVideos()">Search</button>
-      <button onclick="getTrending()">Trending</button>
+    <div class="header-left">
+      <div class="menu-icon" onclick="toggleSidebar()"><span></span><span></span><span></span></div>
+      <a class="logo" onclick="getTrending()">
+        <span class="logo-mark"></span>
+        <span class="logo-text">Ligma<span class="accent">Tube</span></span>
+      </a>
+    </div>
+
+    <div class="header-center">
+      <div id="search-bar">
+        <input id="search-input" type="text" placeholder="Search" onkeydown="if(event.key==='Enter') searchVideos()">
+        <button class="search-btn" onclick="searchVideos()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#0F0F0F" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="trending-pill" onclick="getTrending()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        <span class="label">Trending</span>
+      </div>
     </div>
   </header>
 
-  <main>
-    <div id="player">
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-item active" data-q="" onclick="sidebarTrending(this)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Home</span>
+    </div>
+    <div class="sidebar-item" onclick="sidebarTrendingLink(this)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      <span>Trending</span>
+    </div>
+    <div class="sidebar-item" data-q="lofi music" onclick="sidebarSearch(this)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+      <span>Music</span>
+    </div>
+    <div class="sidebar-item" data-q="gaming highlights" onclick="sidebarSearch(this)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="3"/><line x1="7" y1="12" x2="9" y2="12"/><line x1="8" y1="11" x2="8" y2="13"/><circle cx="15" cy="11" r="1"/><circle cx="17" cy="13" r="1"/></svg>
+      <span>Gaming</span>
+    </div>
+    <div class="sidebar-item" data-q="comedy sketch" onclick="sidebarSearch(this)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+      <span>Comedy</span>
+    </div>
+    <div class="sidebar-item" data-q="news today" onclick="sidebarSearch(this)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+      <span>News</span>
+    </div>
+  </nav>
+
+  <div class="chips" id="chips">
+    <div class="chip active" data-q="" onclick="chipTrending(this)">All</div>
+    <div class="chip" data-q="lofi music" onclick="chipSearch(this)">Music</div>
+    <div class="chip" data-q="gaming highlights" onclick="chipSearch(this)">Gaming</div>
+    <div class="chip" data-q="comedy sketch" onclick="chipSearch(this)">Comedy</div>
+    <div class="chip" data-q="news today" onclick="chipSearch(this)">News</div>
+    <div class="chip" data-q="cooking recipe" onclick="chipSearch(this)">Cooking</div>
+    <div class="chip" data-q="tech review" onclick="chipSearch(this)">Tech</div>
+    <div class="chip" data-q="sports" onclick="chipSearch(this)">Sports</div>
+  </div>
+
+  <div id="player">
+    <div class="player-frame-wrap">
       <iframe id="video-player" allowfullscreen></iframe>
     </div>
-    <div id="video-list"></div>
-  </main>
+    <div id="player-title"></div>
+    <div id="player-channel"></div>
+  </div>
+
+  <div id="video-list">
+    <div class="loading-msg">Loading videos…</div>
+  </div>
 
 <script>
   const API_KEY = 'AIzaSyABURLwF9n6F38yZl2xZzXyGovyvz_wN54';
-  
-  async function searchVideos() {
-    const query = document.getElementById("search-input").value;
-    if (!query) return;
 
-    const res = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=12&q=${encodeURIComponent(query)}&key=${API_KEY}`
-    );
-    const data = await res.json();
-    displayVideos(data.items);
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebar-overlay').classList.toggle('open');
+  }
+
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('open');
+  }
+
+  function setActiveSidebarItem(el) {
+    document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+    if (el) el.classList.add('active');
+  }
+
+  function sidebarTrending(el) {
+    setActiveSidebarItem(el);
+    setActiveChip(document.querySelector('.chip[data-q=""]'));
+    getTrending();
+    closeSidebar();
+  }
+
+  function sidebarTrendingLink(el) {
+    setActiveSidebarItem(el);
+    getTrending();
+    closeSidebar();
+  }
+
+  function sidebarSearch(el) {
+    setActiveSidebarItem(el);
+    setActiveChip(null);
+    runSearch(el.dataset.q);
+    closeSidebar();
+  }
+
+  function setActiveChip(el) {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    if (el) el.classList.add('active');
+  }
+
+  function chipTrending(el) {
+    setActiveChip(el);
+    getTrending();
+  }
+
+  function chipSearch(el) {
+    setActiveChip(el);
+    runSearch(el.dataset.q);
+  }
+
+  async function searchVideos() {
+    const query = document.getElementById("search-input").value.trim();
+    if (!query) return;
+    setActiveChip(null);
+    runSearch(query);
+  }
+
+  async function runSearch(query) {
+    showLoading();
+    try {
+      const res = await fetch(
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=16&q=${encodeURIComponent(query)}&key=${API_KEY}`
+      );
+      const data = await res.json();
+      displayVideos(data.items || []);
+    } catch (e) {
+      showError();
+    }
   }
 
   async function getTrending() {
-    const res = await fetch(
-      `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&chart=mostPopular&maxResults=12&regionCode=US&key=${API_KEY}`
-    );
-    const data = await res.json();
-    displayVideos(data.items);
+    document.getElementById('player').style.display = 'none';
+    showLoading();
+    try {
+      const res = await fetch(
+        `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&chart=mostPopular&maxResults=16&regionCode=US&key=${API_KEY}`
+      );
+      const data = await res.json();
+      displayVideos(data.items || []);
+    } catch (e) {
+      showError();
+    }
+  }
+
+  function showLoading() {
+    document.getElementById("video-list").innerHTML = '<div class="loading-msg">Loading videos…</div>';
+  }
+
+  function showError() {
+    document.getElementById("video-list").innerHTML = '<div class="loading-msg">Couldn\'t load videos right now. Try again in a moment.</div>';
+  }
+
+  function formatViews(n) {
+    n = parseInt(n, 10);
+    if (!n) return '';
+    if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M views';
+    if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K views';
+    return n + ' views';
+  }
+
+  function initials(name) {
+    return (name || '?').trim().charAt(0).toUpperCase();
   }
 
   function displayVideos(videos) {
     const container = document.getElementById("video-list");
+    if (!videos.length) {
+      container.innerHTML = '<div class="loading-msg">No results found.</div>';
+      return;
+    }
     container.innerHTML = "";
-
     videos.forEach((video) => {
       const videoId = video.id.videoId || video.id;
       const snippet = video.snippet;
-
+      const views = video.statistics ? formatViews(video.statistics.viewCount) : '';
       const div = document.createElement("div");
       div.className = "video";
+      div.onclick = () => playVideo(videoId, snippet.title, snippet.channelTitle);
       div.innerHTML = `
-        <img src="${snippet.thumbnails.medium.url}" alt="${snippet.title}" onclick="playVideo('${videoId}')">
-        <h3>${snippet.title}</h3>
-        <p>${snippet.channelTitle}</p>
+        <div class="thumb-wrap">
+          <img src="${snippet.thumbnails.medium.url}" alt="${snippet.title}">
+        </div>
+        <div class="video-info">
+          <div class="video-avatar">${initials(snippet.channelTitle)}</div>
+          <div class="video-meta">
+            <p class="video-title">${snippet.title}</p>
+            <p class="video-channel">${snippet.channelTitle}</p>
+            ${views ? `<p class="video-stats">${views}</p>` : ''}
+          </div>
+        </div>
       `;
       container.appendChild(div);
     });
   }
 
-  function playVideo(videoId) {
+  function playVideo(videoId, title, channel) {
     const player = document.getElementById("player");
     const iframe = document.getElementById("video-player");
-    iframe.src = `https://www.youtube.com/embed/${videoId}`;
+    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+    document.getElementById('player-title').textContent = title;
+    document.getElementById('player-channel').textContent = channel;
     player.style.display = "block";
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  // Load trending videos by default
   window.onload = getTrending;
 </script>
 </body>
