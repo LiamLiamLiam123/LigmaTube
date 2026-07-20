@@ -412,6 +412,135 @@
     font-size: 0.95rem;
   }
 
+  /* ---------- COMMENTS ---------- */
+  #comments-section {
+    max-width: 1000px;
+    margin: 28px auto 40px;
+    padding: 0 24px;
+    display: none;
+  }
+  .comments-heading {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 20px;
+  }
+  .comment-form {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .comment-form-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00A651, #063D22);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+  .comment-form-body { flex: 1; }
+  #comment-input {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid var(--yt-border);
+    padding: 6px 0;
+    font-size: 0.95rem;
+    font-family: 'Roboto', Arial, sans-serif;
+    outline: none;
+    background: transparent;
+    color: var(--yt-black);
+  }
+  #comment-input:focus { border-bottom-color: #063D22; }
+  .comment-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .comment-form-actions button {
+    border: none;
+    border-radius: 18px;
+    padding: 8px 16px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-family: 'Roboto', Arial, sans-serif;
+  }
+  .comment-cancel-btn {
+    background: transparent;
+    color: var(--yt-gray-text);
+  }
+  .comment-cancel-btn:hover { background: var(--yt-hover); }
+  .comment-submit-btn {
+    background: #063D22;
+    color: #fff;
+  }
+  .comment-submit-btn:hover { background: #0C6B3C; }
+  .comment-submit-btn:disabled {
+    background: var(--yt-border);
+    color: #9AAFA1;
+    cursor: not-allowed;
+  }
+
+  .comment {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  .comment-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.85rem;
+    background: linear-gradient(135deg, #0C6B3C, #063D22);
+  }
+  .comment-body { flex: 1; min-width: 0; }
+  .comment-header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .comment-author {
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+  .comment-time {
+    font-size: 0.78rem;
+    color: var(--yt-gray-text);
+  }
+  .comment-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #063D22;
+    background: var(--yt-light-gray);
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .comment-text {
+    font-size: 0.9rem;
+    line-height: 1.45;
+    margin: 4px 0 6px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .comment-likes {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    color: var(--yt-gray-text);
+  }
+
   @media (max-width: 700px) {
     .header-left { min-width: auto; }
     .logo-text { display: none; }
@@ -513,6 +642,21 @@
     </div>
   </div>
 
+  <div id="comments-section">
+    <p class="comments-heading" id="comments-heading">Comments</p>
+    <div class="comment-form">
+      <div class="comment-form-avatar">U</div>
+      <div class="comment-form-body">
+        <input id="comment-input" type="text" placeholder="Add a comment..." onfocus="showCommentActions()">
+        <div class="comment-form-actions" id="comment-form-actions" style="display:none;">
+          <button class="comment-cancel-btn" onclick="cancelComment()">Cancel</button>
+          <button class="comment-submit-btn" id="comment-submit-btn" onclick="submitComment()" disabled>Comment</button>
+        </div>
+      </div>
+    </div>
+    <div id="comments-list"></div>
+  </div>
+
   <div id="video-list">
     <div class="loading-msg">Loading videos…</div>
   </div>
@@ -592,6 +736,7 @@
 
   async function getTrending() {
     document.getElementById('player').style.display = 'none';
+    document.getElementById('comments-section').style.display = 'none';
     showLoading();
     try {
       const res = await fetch(
@@ -683,6 +828,126 @@
     renderVotes();
   }
 
+  let commentInputWired = false;
+
+  function showCommentActions() {
+    document.getElementById('comment-form-actions').style.display = 'flex';
+    if (!commentInputWired) {
+      document.getElementById('comment-input').addEventListener('input', (e) => {
+        document.getElementById('comment-submit-btn').disabled = e.target.value.trim().length === 0;
+      });
+      commentInputWired = true;
+    }
+  }
+
+  function cancelComment() {
+    const input = document.getElementById('comment-input');
+    input.value = '';
+    document.getElementById('comment-submit-btn').disabled = true;
+    document.getElementById('comment-form-actions').style.display = 'none';
+    input.blur();
+  }
+
+  function timeAgo(iso) {
+    if (!iso) return '';
+    const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+    const units = [
+      ['year', 31536000], ['month', 2592000], ['week', 604800],
+      ['day', 86400], ['hour', 3600], ['minute', 60]
+    ];
+    for (const [label, secs] of units) {
+      const val = Math.floor(seconds / secs);
+      if (val >= 1) return `${val} ${label}${val > 1 ? 's' : ''} ago`;
+    }
+    return 'just now';
+  }
+
+  function stripHtml(html) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || '';
+  }
+
+  function renderComment({ authorName, text, likeCount, time, isLocal }) {
+    const div = document.createElement('div');
+    div.className = 'comment';
+    div.innerHTML = `
+      <div class="comment-avatar">${initials(authorName)}</div>
+      <div class="comment-body">
+        <div class="comment-header">
+          <span class="comment-author">${authorName}</span>
+          <span class="comment-time">${time}</span>
+          ${isLocal ? '<span class="comment-badge">Only visible to you</span>' : ''}
+        </div>
+        <p class="comment-text">${text}</p>
+        <div class="comment-likes">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/></svg>
+          ${likeCount}
+        </div>
+      </div>
+    `;
+    return div;
+  }
+
+  function submitComment() {
+    const input = document.getElementById('comment-input');
+    const text = input.value.trim();
+    if (!text) return;
+    const list = document.getElementById('comments-list');
+    const node = renderComment({
+      authorName: 'You',
+      text: text.replace(/</g, '&lt;'),
+      likeCount: 0,
+      time: 'just now',
+      isLocal: true
+    });
+    list.prepend(node);
+    cancelComment();
+  }
+
+  async function loadComments(videoId) {
+    const section = document.getElementById('comments-section');
+    const list = document.getElementById('comments-list');
+    const heading = document.getElementById('comments-heading');
+    section.style.display = 'block';
+    list.innerHTML = '<p class="loading-msg" style="padding:20px 0;">Loading comments…</p>';
+    heading.textContent = 'Comments';
+
+    try {
+      const res = await fetch(
+        `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${videoId}&maxResults=20&order=relevance&key=${API_KEY}`
+      );
+      const data = await res.json();
+      list.innerHTML = '';
+
+      if (data.error) {
+        list.innerHTML = '<p class="loading-msg" style="padding:20px 0;">Comments are turned off for this video.</p>';
+        return;
+      }
+
+      const items = data.items || [];
+      heading.textContent = `${items.length}${items.length === 20 ? '+' : ''} Comments`;
+
+      if (!items.length) {
+        list.innerHTML = '<p class="loading-msg" style="padding:20px 0;">No comments yet.</p>';
+        return;
+      }
+
+      items.forEach((item) => {
+        const c = item.snippet.topLevelComment.snippet;
+        list.appendChild(renderComment({
+          authorName: c.authorDisplayName,
+          text: stripHtml(c.textDisplay).replace(/</g, '&lt;'),
+          likeCount: formatCount(c.likeCount),
+          time: timeAgo(c.publishedAt),
+          isLocal: false
+        }));
+      });
+    } catch (e) {
+      list.innerHTML = '<p class="loading-msg" style="padding:20px 0;">Couldn\'t load comments right now.</p>';
+    }
+  }
+
   function toggleDescription() {
     const box = document.getElementById('description-box');
     const toggle = document.getElementById('description-toggle');
@@ -733,6 +998,8 @@
     } catch (e) {
       // silently ignore description fetch failure
     }
+
+    loadComments(videoId);
   }
 
   window.onload = getTrending;
